@@ -1,0 +1,68 @@
+# .github/workflows/build-vial.yml
+name: Build Vial firmware
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - '**'  # すべてのブランチを対象
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1) ソース取得（サブモジュールはあとで）
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      # 2) サブモジュールを固定リビジョンで初期化
+      - name: Init submodules
+        run: |
+          git submodule sync --recursive
+          git submodule update --init --recursive
+
+      # 3) ビルド依存ツール + QMK CLI
+      - name: Install toolchain & QMK CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential git python3 python3-pip \
+            gcc-avr avr-libc \
+            gcc-arm-none-eabi binutils-arm-none-eabi \
+            libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+          python3 -m pip install --user qmk
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      # 4) submodule の Python 依存を満たす
+      - name: Install QMK Python requirements
+        run: |
+          python3 -m pip install --user \
+            -r src/qmk/qmk_firmware/requirements.txt
+          python3 -m pip install --user \
+            -r src/vial-kb/vial-qmk/requirements.txt
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      # 5) Vial ファームをビルド
+      - name: Compile Corne Vial firmware
+        run: |
+          make vial-qmk-clean
+          kb=crkbd make vial-qmk-init
+          kb=crkbd kr=rev4_1/standard km=vial make vial-qmk-compile
+
+      # For Debug
+      - name: list expected artifact paths
+        run: |
+          echo "expected standard build path:"
+          ls -lh src/vial-kb/vial-qmk/.build/*.uf2 || echo "(no .uf2 found)"
+          echo "expected copied path (makefile side):"
+          ls -lh keyboards/crkbd/vial-kb/vial-qmk/.build/*.uf2 || echo "(no .uf2 found)"
+
+      # 6) 成果物をアップロード
+      - name: Upload firmware artifact (robust)
+        uses: actions/upload-artifact@v4
+        with:
+          name: corne-vial-${{ github.run_number }}
+          path: |
+            keyboards/crkbd/vial-kb/vial-qmk/.build/crkbd_rev4_1_standard_vial.uf2
