@@ -94,6 +94,21 @@ Keymaps for VIA/Vial are in `keyboards/<kb>/qmk/qmk_firmware/keymaps/via/keymap.
 
 Vial keymaps additionally include `vial.json` (Vial UI layout definition) and `config.h`/`rules.mk`.
 
+### Vial GUI labels vs QMK API mapping
+
+The tap-hold toggles in Vial GUI's QMK Settings tab use QMK's old API names (hardcoded in vial-kb/vial-gui's `src/main/resources/base/qmk_settings.json`). Vial-QMK firmware has migrated to the new API, so the mapping is:
+
+| Vial GUI label            | QSID/bit    | Internal function              | Effect when checked                                  | QMK API                                   |
+|---------------------------|-------------|--------------------------------|------------------------------------------------------|-------------------------------------------|
+| Permissive Hold           | QSID=8 bit0 | `get_permissive_hold`          | Permissive Hold ON                                   | `PERMISSIVE_HOLD`                         |
+| Ignore Mod Tap Interrupt  | QSID=8 bit1 | `get_hold_on_other_key_press`  | `HOLD_ON_OTHER_KEY_PRESS` **OFF** (inverted)         | opposite of `HOLD_ON_OTHER_KEY_PRESS`     |
+| Tapping Force Hold        | QSID=8 bit2 | `get_quick_tap_term`           | `QUICK_TAP_TERM` set to 0 (suppresses repeat-tap hold) | `QUICK_TAP_TERM`                        |
+| Retro Tapping             | QSID=8 bit3 | `get_retro_tapping`            | Retro Tapping ON                                     | `RETRO_TAPPING`                           |
+
+Note: "Ignore Mod Tap Interrupt" is inverted — leaving it **unchecked** (default) is equivalent to `HOLD_ON_OTHER_KEY_PRESS` being enabled.
+
+Reference: `src/vial-kb/vial-qmk/quantum/qmk_settings.c` (around line 263–281)
+
 ## CI
 
 Two GitHub Actions workflows run on every push, each uploading the `.uf2` as a workflow artifact:
