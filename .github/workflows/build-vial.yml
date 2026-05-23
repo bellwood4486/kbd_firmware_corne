@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - '**'  # すべてのブランチを対象
+      - main
 
 jobs:
   build:
