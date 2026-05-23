@@ -96,4 +96,7 @@ Vial keymaps additionally include `vial.json` (Vial UI layout definition) and `c
 
 ## CI
 
-GitHub Actions (`build-via.yml`) runs on every push, builds `crkbd rev4_1/standard via`, and uploads the `.uf2` as a workflow artifact.
+Two GitHub Actions workflows run on every push, each uploading the `.uf2` as a workflow artifact:
+
+- `build-via.yml`: builds `crkbd rev4_1/standard via`
+- `build-vial.yml`: builds `crkbd rev4_1/standard vial`

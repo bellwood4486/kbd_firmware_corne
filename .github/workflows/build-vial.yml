@@ -1,5 +1,5 @@
-# .github/workflows/build-via.yml
-name: Build VIA firmware
+# .github/workflows/build-vial.yml
+name: Build Vial firmware
 
 on:
   workflow_dispatch:
@@ -40,27 +40,29 @@ jobs:
         run: |
           python3 -m pip install --user \
             -r src/qmk/qmk_firmware/requirements.txt
+          python3 -m pip install --user \
+            -r src/vial-kb/vial-qmk/requirements.txt
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
-      # 5) VIA ファームをビルド
-      - name: Compile Corne VIA firmware
+      # 5) Vial ファームをビルド
+      - name: Compile Corne Vial firmware
         run: |
-          make qmk-clean
-          kb=crkbd make qmk-init
-          kb=crkbd kr=rev4_1/standard km=via make qmk-compile
+          make vial-qmk-clean
+          kb=crkbd make vial-qmk-init
+          kb=crkbd kr=rev4_1/standard km=vial make vial-qmk-compile
 
       # For Debug
       - name: list expected artifact paths
         run: |
           echo "expected standard build path:"
-          ls -lh src/qmk/qmk_firmware/.build/*.uf2 || echo "(no .uf2 found)"
+          ls -lh src/vial-kb/vial-qmk/.build/*.uf2 || echo "(no .uf2 found)"
           echo "expected copied path (makefile side):"
-          ls -lh keyboards/crkbd/qmk/qmk_firmware/.build/*.uf2 || echo "(no .uf2 found)"
+          ls -lh keyboards/crkbd/vial-kb/vial-qmk/.build/*.uf2 || echo "(no .uf2 found)"
 
       # 6) 成果物をアップロード
       - name: Upload firmware artifact (robust)
         uses: actions/upload-artifact@v4
         with:
-          name: corne-via-${{ github.run_number }}
+          name: corne-vial-${{ github.run_number }}
           path: |
-            keyboards/crkbd/qmk/qmk_firmware/.build/crkbd_rev4_1_standard_via.uf2
+            keyboards/crkbd/vial-kb/vial-qmk/.build/crkbd_rev4_1_standard_vial.uf2
